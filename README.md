@@ -112,5 +112,5 @@ enviar_mensaje("🧠 ¡Hola mundo! Drop detectado.")
 ## ✍️ Autor
 
 * Proyecto desarrollado por Manuel Godoy
-* Colaboración con socio en Chile
+* Colaboración con Juan
 * Licencia privada ⚠️
