@@ -1,28 +1,40 @@
-from navegador import iniciar_navegador
 from playwright.sync_api import TimeoutError
+from navegador import iniciar_navegador, cerrar_todo
+
+HOME_URL = "https://moredrops.cl/"
+URL_PRODUCTO = "https://moredrops.cl/Drops/Genero/Hombre/Footwear-Men/Sneakers-Men/Mostro-Leather-Zapatilla-Puma-Unisex-Negro/p/PM40227301080"
 
 def main():
-    navegador, pagina = iniciar_navegador()
+    playwright, navegador, contexto, pagina, _ = iniciar_navegador(headless=False)
 
     try:
-        # Ir a la página del producto
-        pagina.goto("https://moredrops.cl/Drops/Genero/Hombre/Footwear-Men/Sneakers-Men/Mostro-Leather-Zapatilla-Puma-Unisex-Negro/p/PM40227301080", timeout=20000)
+        # 0) Cargar la home primero y esperar a que termine el tráfico principal
+        print("🚀 Abriendo la web...")
+        pagina.goto(HOME_URL, timeout=30000, wait_until="domcontentloaded")
+        # Espera adicional a que se asienten las peticiones (imágenes, bundles, etc.)
+        pagina.wait_for_load_state("networkidle")
 
-        # Esperar a que aparezca la talla US 9 y hacer clic
-        pagina.wait_for_selector('a[title="US 9 UNSX"]')
+        # 1) Pausa para login (ya con la web cargada)
+        print("🌐 La web ya cargó. Si necesitas iniciar sesión, hazlo ahora en esta ventana.")
+        print("   (Si ya tienes sesión guardada, simplemente presiona Enter para continuar).")
+        input("⏳ Presiona Enter cuando quieras continuar con el bot...")
+
+        # 2) Lógica automática: ir al producto, elegir talla y añadir al carrito
+        pagina.goto(URL_PRODUCTO, timeout=30000, wait_until="domcontentloaded")
+        pagina.wait_for_selector('a[title="US 9 UNSX"]', timeout=15000)
         pagina.click('a[title="US 9 UNSX"]', timeout=5000)
         print("✅ Talla seleccionada")
 
-        # Esperar a que cargue el botón y hacer clic en "Agregar al carro"
-        pagina.wait_for_selector('button#addToCartButton', timeout=10000)
+        pagina.wait_for_selector('button#addToCartButton', timeout=15000)
         pagina.click('button#addToCartButton')
         print("✅ Producto agregado al carrito")
 
     except TimeoutError as e:
         print(f"❌ Timeout: {e}")
 
-    input("Presiona Enter para cerrar...")
-    navegador.close()
+    # 3) Mantener el navegador abierto hasta que decidas cerrar y guardar sesión
+    input("🔐 Presiona Enter para guardar la sesión y cerrar el bot...")
+    cerrar_todo(playwright, navegador, contexto, guardar_estado=True)
 
 if __name__ == "__main__":
     main()
